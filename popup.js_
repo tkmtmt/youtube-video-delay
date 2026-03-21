@@ -1,0 +1,34 @@
+const DEFAULTS = {
+  enabled: true,
+  offsetMs: 0
+};
+
+const enabledEl = document.getElementById("enabled");
+const offsetRangeEl = document.getElementById("offsetRange");
+const offsetValueEl = document.getElementById("offsetValue");
+
+async function loadSettings() {
+  const data = await chrome.storage.local.get(DEFAULTS);
+  enabledEl.checked = data.enabled;
+  offsetRangeEl.value = data.offsetMs;
+  offsetValueEl.textContent = data.offsetMs;
+}
+
+async function saveSettings(partial) {
+  const current = await chrome.storage.local.get(DEFAULTS);
+  const next = { ...current, ...partial };
+  await chrome.storage.local.set(next);
+  offsetValueEl.textContent = next.offsetMs;
+}
+
+enabledEl.addEventListener("change", async () => {
+  await saveSettings({ enabled: enabledEl.checked });
+});
+
+offsetRangeEl.addEventListener("input", async () => {
+  const offsetMs = Number(offsetRangeEl.value);
+  offsetValueEl.textContent = offsetMs;
+  await saveSettings({ offsetMs });
+});
+
+loadSettings();

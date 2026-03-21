@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <title>YouTube BT Sync Fix</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      width: 280px;
+      margin: 12px;
+    }
+
+    .row {
+      margin-bottom: 12px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 6px;
+      font-size: 14px;
+    }
+
+    input[type="range"] {
+      width: 100%;
+    }
+
+    .value {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    .tick-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+  </style>
+</head>
+<body>
+  <div class="row">
+    <label>
+      <input type="checkbox" id="enabled">
+      補正を有効化
+    </label>
+  </div>
+
+  <div class="row">
+    <label for="offsetRange">
+      オフセット: <span id="offsetValue" class="value">0</span> ms
+    </label>
+    <input type="range" id="offsetRange" min="-300" max="300" step="10" value="0">
+    <div class="row">
+    <label for="offsetRange">
+      オフセット: <span id="offsetValue" class="value">0</span> ms
+    </label>
+    <input type="range" id="offsetRange" min="-300" max="300" step="10" value="0" list="offsetTicks">
+    <datalist id="offsetTicks">
+      <option value="-300"></option>
+      <option value="-200"></option>
+      <option value="-100"></option>
+      <option value="0"></option>
+      <option value="100"></option>
+      <option value="200"></option>
+      <option value="300"></option>
+    </datalist>
+    <div class="tick-labels">
+      <span>-300</span>
+      <span>-200</span>
+      <span>-100</span>
+      <span>0</span>
+      <span>100</span>
+      <span>200</span>
+      <span>300</span>
+    </div>
+  </div>
+
+  <div class="hint">
+    ＋: 映像を遅らせる<br>
+    －: 音を遅らせる
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
