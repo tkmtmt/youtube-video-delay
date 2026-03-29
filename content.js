@@ -1,7 +1,8 @@
 (() => {
   const DEFAULTS = {
     enabled: true,
-    offsetMs: 0
+    offsetMs: 0,
+    fps: 45
   };
 
   let settings = { ...DEFAULTS };
@@ -18,13 +19,15 @@
   let hoverValue = null;
   let hoverEnabled = null;
   let hoverHideTimer = null;
+  let hoverFpsSlider = null;
+  let hoverFpsValue = null;
 
   let rafId = null;
 
   const frameQueue = [];
   const maxQueueMs = 1200;
   let lastCaptureTime = 0;
-  const captureIntervalMs = 1000 / 45;
+  let captureIntervalMs = 1000 / 45;
 
   let isUiMode = false;
   let uiModeTimer = null;
@@ -45,9 +48,21 @@
     return Number(settings.offsetMs || 0);
   }
 
+  function getFps() {
+    return Number(settings.fps || 45);
+  }
+
+  function updateCaptureInterval() {
+    const fps = getFps();
+    captureIntervalMs = 1000 / fps;
+  }
+
   async function saveSettings(partial) {
     settings = { ...settings, ...partial };
     await chrome.storage.local.set(partial);
+    if (partial.fps) {
+      updateCaptureInterval();
+    }
   }
 
   async function loadSettings() {
@@ -246,6 +261,64 @@
       applyMode();
     });
 
+    const fpsRow = document.createElement("div");
+    fpsRow.style.marginTop = "12px";
+    fpsRow.style.paddingTop = "10px";
+    fpsRow.style.borderTop = "1px solid rgba(255,255,255,0.2)";
+
+    const fpsLabel = document.createElement("div");
+    fpsLabel.style.marginBottom = "8px";
+    fpsLabel.textContent = "フレームレート";
+    fpsLabel.style.fontWeight = "bold";
+    fpsLabel.style.fontSize = "12px";
+
+    hoverFpsValue = document.createElement("div");
+    hoverFpsValue.style.marginBottom = "8px";
+    hoverFpsValue.style.color = "#ffff99";
+    hoverFpsValue.style.fontWeight = "bold";
+
+    hoverFpsSlider = document.createElement("input");
+    hoverFpsSlider.type = "range";
+    hoverFpsSlider.min = "15";
+    hoverFpsSlider.max = "60";
+    hoverFpsSlider.step = "1";
+    hoverFpsSlider.value = "45";
+    hoverFpsSlider.style.width = "100%";
+    hoverFpsSlider.setAttribute("list", "yt-bt-sync-fps-ticks");
+
+    const fpsTicks = document.createElement("datalist");
+    fpsTicks.id = "yt-bt-sync-fps-ticks";
+    [15, 30, 45, 60].forEach(v => {
+      const opt = document.createElement("option");
+      opt.value = String(v);
+      fpsTicks.appendChild(opt);
+    });
+
+    const fpsScaleRow = document.createElement("div");
+    fpsScaleRow.style.display = "flex";
+    fpsScaleRow.style.justifyContent = "space-between";
+    fpsScaleRow.style.marginTop = "6px";
+    fpsScaleRow.style.fontSize = "11px";
+    fpsScaleRow.style.color = "#ccc";
+
+    [15, 30, 45, 60].forEach(v => {
+      const s = document.createElement("span");
+      s.textContent = String(v);
+      fpsScaleRow.appendChild(s);
+    });
+
+    hoverFpsSlider.addEventListener("input", async () => {
+      const fps = Number(hoverFpsSlider.value);
+      hoverFpsValue.textContent = `${fps} FPS`;
+      await saveSettings({ fps });
+    });
+
+    fpsRow.appendChild(fpsLabel);
+    fpsRow.appendChild(hoverFpsValue);
+    fpsRow.appendChild(hoverFpsSlider);
+    fpsRow.appendChild(fpsTicks);
+    fpsRow.appendChild(fpsScaleRow);
+
     hoverPanel.addEventListener("mouseenter", () => {
       if (hoverHideTimer) {
         clearTimeout(hoverHideTimer);
@@ -263,6 +336,7 @@
     hoverPanel.appendChild(hoverSlider);
     hoverPanel.appendChild(tickList);
     hoverPanel.appendChild(scaleRow);
+    hoverPanel.appendChild(fpsRow);
 
     document.body.appendChild(hoverPanel);
   }
@@ -272,6 +346,10 @@
     hoverEnabled.checked = !!settings.enabled;
     hoverSlider.value = String(getOffsetMs());
     hoverValue.textContent = `${getOffsetMs()} ms`;
+    if (hoverFpsSlider) {
+      hoverFpsSlider.value = String(getFps());
+      hoverFpsValue.textContent = `${getFps()} FPS`;
+    }
   }
 
   function showHoverPanel() {
